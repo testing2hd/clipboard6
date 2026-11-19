@@ -41,10 +41,6 @@ final class Downloader {
     private static boolean ready;
     static volatile String currentId;
     static volatile boolean cancelled;
-    /** Live state of the current download, read by the sidebar card. */
-    static volatile boolean liveActive;
-    static volatile int livePct = -1;
-    static volatile String liveText = "";
 
     static synchronized void ensureInit(Context c) throws Exception {
         if (ready) return;
