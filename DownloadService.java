@@ -27,9 +27,6 @@ public class DownloadService extends Service {
     public static void start(Context c, String url, String fmt) { start(c, url, fmt, null); }
 
     public static void start(Context c, String url, String fmt, String folder) {
-        Downloader.liveActive = true;
-        Downloader.livePct = -1;
-        Downloader.liveText = "Preparing...";
         c.startForegroundService(new Intent(c, DownloadService.class)
                 .putExtra("url", url).putExtra("fmt", fmt).putExtra("folder", folder));
     }
@@ -42,7 +39,7 @@ public class DownloadService extends Service {
         final String url = intent == null ? null : intent.getStringExtra("url");
         final String fmt = intent == null ? null : intent.getStringExtra("fmt");
         final String folder = intent == null ? null : intent.getStringExtra("folder");
-        if (url == null) { Downloader.liveActive = false; stopSelf(); return START_NOT_STICKY; }
+        if (url == null) { stopSelf(); return START_NOT_STICKY; }
         getSystemService(NotificationManager.class)
                 .createNotificationChannel(new NotificationChannel(CH, "Downloads", NotificationManager.IMPORTANCE_LOW));
         Notification n = progress("Preparing download...", -1);
@@ -72,8 +69,6 @@ public class DownloadService extends Service {
         try {
             Downloader.Result res = Downloader.download(this, url, fmt, folder, (pct, line) -> {
                 String t = pct >= 0 ? pct + "%" : (line == null ? "Working..." : line);
-                Downloader.livePct = pct;
-                Downloader.liveText = t;
                 nm.notify(NID, progress(t, pct));
             });
             Uri out = res.uri;
@@ -99,9 +94,7 @@ public class DownloadService extends Service {
                     .setStyle(new Notification.BigTextStyle().bigText(m))
                     .setAutoCancel(true).build());
         } finally {
-            if (--pending <= 0) Downloader.liveActive = false;
-            else { Downloader.livePct = -1; Downloader.liveText = "Next in queue..."; }
-            if (pending <= 0) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); }
+            if (--pending <= 0) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); }
         }
     }
 
